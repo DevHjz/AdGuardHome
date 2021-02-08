@@ -14,16 +14,24 @@ import (
 	"github.com/AdguardTeam/AdGuardHome/internal/dnsfilter"
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
 	aghtest.DiscardLogOutput(m)
 }
 
-func prepareTestDir() string {
+func prepareTestDir(t *testing.T) string {
+	t.Helper()
+
 	const dir = "./agh-test"
-	_ = os.RemoveAll(dir)
-	_ = os.MkdirAll(dir, 0o755)
+	assert.Nil(t, os.RemoveAll(dir))
+	require.Nil(t, os.MkdirAll(dir, 0o755))
+
+	t.Cleanup(func() {
+		assert.Nil(t, os.RemoveAll(dir))
+	})
+
 	return dir
 }
 
@@ -35,8 +43,7 @@ func TestQueryLog(t *testing.T) {
 		Interval:    1,
 		MemSize:     100,
 	}
-	conf.BaseDir = prepareTestDir()
-	defer func() { _ = os.RemoveAll(conf.BaseDir) }()
+	conf.BaseDir = prepareTestDir(t)
 	l := newQueryLog(conf)
 
 	// add disk entries
@@ -118,8 +125,7 @@ func TestQueryLogOffsetLimit(t *testing.T) {
 		Interval: 1,
 		MemSize:  100,
 	}
-	conf.BaseDir = prepareTestDir()
-	defer func() { _ = os.RemoveAll(conf.BaseDir) }()
+	conf.BaseDir = prepareTestDir(t)
 	l := newQueryLog(conf)
 
 	// add 10 entries to the log
@@ -172,8 +178,7 @@ func TestQueryLogMaxFileScanEntries(t *testing.T) {
 		Interval:    1,
 		MemSize:     100,
 	}
-	conf.BaseDir = prepareTestDir()
-	defer func() { _ = os.RemoveAll(conf.BaseDir) }()
+	conf.BaseDir = prepareTestDir(t)
 	l := newQueryLog(conf)
 
 	// add 10 entries to the log
@@ -200,8 +205,7 @@ func TestQueryLogFileDisabled(t *testing.T) {
 		Interval:    1,
 		MemSize:     2,
 	}
-	conf.BaseDir = prepareTestDir()
-	defer func() { _ = os.RemoveAll(conf.BaseDir) }()
+	conf.BaseDir = prepareTestDir(t)
 	l := newQueryLog(conf)
 
 	addEntry(l, "example1.org", net.IPv4(1, 1, 1, 1), net.IPv4(2, 2, 2, 1))
